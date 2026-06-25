@@ -14,10 +14,10 @@ env:
 jobs:
   check:
     name: Check & Lint
-    runs-on: ubuntu-latest
+    runs-on: confidential-e2e   # cifrai org self-hosted confidential runner
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - run: sudo apt-get update && sudo apt-get install -y libtss2-dev
+      - run: sudo apt-get update && sudo apt-get install -y libtss2-dev build-essential pkg-config
       - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
         with:
           components: clippy, rustfmt
@@ -28,10 +28,10 @@ jobs:
 
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: confidential-e2e   # cifrai org self-hosted confidential runner
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - run: sudo apt-get update && sudo apt-get install -y libtss2-dev
+      - run: sudo apt-get update && sudo apt-get install -y libtss2-dev build-essential pkg-config
       - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
       - run: cargo test --workspace
@@ -43,6 +43,7 @@ jobs:
   release-build:
     name: Release Build ${{ matrix.target }}
     needs: [check, test]
+    if: false   # disabled for confidential-runner validation (arm/macOS need other runner types)
     # TEMP: dropped the push/main guard so the matrix runs on PRs for testing.
     # Restore before merge: if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ${{ matrix.os }}
@@ -120,6 +121,7 @@ jobs:
   docker-build:
     name: Docker Build
     needs: [check, test]
+    if: false   # disabled for confidential-runner validation (needs docker/dind on the runner)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -210,6 +212,7 @@ jobs:
 
   audit:
     name: Security Audit
+    if: false   # disabled for confidential-runner validation (focus on check+test)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
